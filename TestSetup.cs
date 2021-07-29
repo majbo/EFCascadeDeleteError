@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using Xunit;
 using Xunit.Abstractions;
 
-namespace TestProject1
+namespace TestProject
 {
     public class TestContext : DbContext
     {
@@ -74,15 +74,8 @@ namespace TestProject1
             PrepareDatabase(context);
 
             var barTag = context.Tags.Single(p => p.Name == "Bar");
-            var barEntry = context.Entry(barTag);
-            //barEntry.Property(nameof(Tag.SynonymForId)).CurrentValue = null;
             barTag.SynonymForId = null;
-
             context.SaveChangesAsync();
-
-
-            barEntry.State = EntityState.Detached;
-            //barEntry.Navigation(nameof(Tag.SynonymFor)).
 
             Assert.Null(context.Tags.Single(p => p.Name == "Bar").SynonymForId);
         }
@@ -93,17 +86,14 @@ namespace TestProject1
             var context = new TestContext {OutputHelper = _outputHelper};
 
             PrepareDatabase(context);
-
-            var temp1 = context.Set<Tag>().AsNoTracking().ToList();
             
             var barTag = context.Tags.Single(p => p.Name == "Bar");
             var barEntry = context.Entry(barTag);
             barEntry.Property(nameof(Tag.SynonymForId)).CurrentValue = null;
+            
+            Assert.Equal(EntityState.Modified, barEntry.State);
+            
             context.SaveChangesAsync();
-
-            barEntry.State = EntityState.Detached;
-
-            var temp2 = context.Set<Tag>().AsNoTracking().ToList();
             
             Assert.Null(context.Tags.Single(p => p.Name == "Bar").SynonymForId);
         }
